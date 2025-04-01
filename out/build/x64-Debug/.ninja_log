@@ -1,0 +1,5 @@
+# ninja log v5
+31	3427	7652022363795112	CMakeFiles/HotelBookingSystem.dir/src/Models/Client.cpp.obj	567cb3fdb6c80541
+41	3509	7652022364642222	CMakeFiles/HotelBookingSystem.dir/src/Models/Administrator.cpp.obj	9fefe2e5814f3983
+18	3751	7652022367087745	CMakeFiles/HotelBookingSystem.dir/src/Models/Person.cpp.obj	9cac2443a968ead2
+50	3953	7652022369094670	CMakeFiles/HotelBookingSystem.dir/src/Models/BookingRequest.cpp.obj	3a082a5d3ee62afa

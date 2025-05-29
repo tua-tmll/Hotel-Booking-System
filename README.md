@@ -2,20 +2,6 @@
 
 A C# Windows Forms application demonstrating inheritance and polymorphism using Material Design.
 
-## Requirements
-
-- Visual Studio 2022
-- .NET 6.0 SDK
-- Windows OS
-
-## Setup Instructions
-
-1. Clone or download this repository
-2. Open `LibrarySystem.sln` in Visual Studio 2022
-3. Restore NuGet packages (Right-click on solution → Restore NuGet Packages)
-4. Build the solution (Build → Build Solution)
-5. Run the application (Debug → Start Debugging or press F5)
-
 ## Features
 
 - Add and manage books and magazines

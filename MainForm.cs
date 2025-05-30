@@ -108,7 +108,7 @@ namespace LibrarySystem
             this.ResumeLayout(false);
         }
 
-        private void AddBookButton_Click(object sender, EventArgs e)
+        private void AddBookButton_Click(object? sender, EventArgs e)
         {
             using (var form = new AddBookForm())
             {
@@ -119,7 +119,7 @@ namespace LibrarySystem
             }
         }
 
-        private void AddMagazineButton_Click(object sender, EventArgs e)
+        private void AddMagazineButton_Click(object? sender, EventArgs e)
         {
             using (var form = new AddMagazineForm())
             {

@@ -14,6 +14,11 @@ namespace LibrarySystem
         // Constructors
         public Book() : base()
         {
+            Author = string.Empty;
+            ISBN = string.Empty;
+            Publisher = string.Empty;
+            PageCount = 0;
+            Edition = 1;
         }
 
         public Book(string title, string itemId, decimal price, string author, string isbn, int pageCount, string publisher, int edition)
@@ -27,10 +32,7 @@ namespace LibrarySystem
         }
 
         // Override methods
-        public override string GetItemType()
-        {
-            return "Book";
-        }
+        public override string GetItemType() => "Book";
 
         public override decimal CalculateLateFee(int daysLate)
         {
@@ -40,12 +42,29 @@ namespace LibrarySystem
 
         public override string GetItemInfo()
         {
-            return base.GetItemInfo() + 
-                   $"\nAuthor: {Author}" +
-                   $"\nISBN: {ISBN}" +
-                   $"\nPages: {PageCount}" +
-                   $"\nPublisher: {Publisher}" +
-                   $"\nEdition: {Edition}";
+            return $"{base.GetItemInfo()}\nAuthor: {Author}\nISBN: {ISBN}\nPages: {PageCount}\nPublisher: {Publisher}\nEdition: {Edition}";
+        }
+
+        public override string Serialize()
+        {
+            return $"{GetItemType()}|{Title}|{ItemId}|{Price}|{IsAvailable}|{Author}|{ISBN}|{PageCount}|{Publisher}|{Edition}";
+        }
+
+        public override void Deserialize(string data)
+        {
+            string[] parts = data.Split('|');
+            if (parts.Length >= 10)
+            {
+                Title = parts[1];
+                ItemId = parts[2];
+                Price = decimal.Parse(parts[3]);
+                IsAvailable = bool.Parse(parts[4]);
+                Author = parts[5];
+                ISBN = parts[6];
+                PageCount = int.Parse(parts[7]);
+                Publisher = parts[8];
+                Edition = int.Parse(parts[9]);
+            }
         }
 
         // New methods specific to books

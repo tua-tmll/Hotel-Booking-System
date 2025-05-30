@@ -19,7 +19,3 @@ A C# Windows Forms application demonstrating inheritance and polymorphism using 
 - `MainForm.cs` - Main application window
 - `AddBookForm.cs` - Form for adding new books
 - `AddMagazineForm.cs` - Form for adding new magazines
-
-## Dependencies
-
-- MaterialSkin.2 (v2.0.0) - For Material Design UI components 

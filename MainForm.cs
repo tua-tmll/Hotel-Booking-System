@@ -11,7 +11,7 @@ namespace LibrarySystem
         {
             InitializeComponent();
             
-            // Initialize Material Design
+            
             var materialSkinManager = MaterialSkinManager.Instance;
             materialSkinManager.AddFormToManage(this);
             materialSkinManager.Theme = MaterialSkinManager.Themes.LIGHT;
@@ -28,15 +28,15 @@ namespace LibrarySystem
         {
             this.SuspendLayout();
             
-            // Form settings
+            
             this.Text = "Library Management System";
             this.Size = new System.Drawing.Size(800, 600);
             
-            // Create Material Design controls
+            
             var tabControl = new MaterialTabControl();
             tabControl.Dock = DockStyle.Fill;
             
-            // Books tab
+            
             var booksTab = new TabPage("Books");
             var booksPanel = new MaterialCard
             {
@@ -67,7 +67,7 @@ namespace LibrarySystem
             booksPanel.Controls.Add(addBookButton);
             booksTab.Controls.Add(booksPanel);
             
-            // Magazines tab
+            
             var magazinesTab = new TabPage("Magazines");
             var magazinesPanel = new MaterialCard
             {
@@ -98,11 +98,11 @@ namespace LibrarySystem
             magazinesPanel.Controls.Add(addMagazineButton);
             magazinesTab.Controls.Add(magazinesPanel);
             
-            // Add tabs to control
+            
             tabControl.TabPages.Add(booksTab);
             tabControl.TabPages.Add(magazinesTab);
             
-            // Add tab control to form
+            
             this.Controls.Add(tabControl);
             
             this.ResumeLayout(false);

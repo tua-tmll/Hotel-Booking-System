@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LibrarySystem
 {
-    public abstract class LibraryItem : ISerializable
+    public abstract class LibraryItem : ISerializable, IComparable<LibraryItem>
     {
         // Properties
         public string Title { get; set; }
@@ -79,6 +79,15 @@ namespace LibrarySystem
                 Price = decimal.Parse(parts[3]);
                 IsAvailable = bool.Parse(parts[4]);
             }
+        }
+
+        // IComparable implementation for generics
+        public int CompareTo(LibraryItem? other)
+        {
+            if (other == null) return 1;
+            int priceCompare = Price.CompareTo(other.Price);
+            if (priceCompare != 0) return priceCompare;
+            return string.Compare(Title, other.Title, StringComparison.OrdinalIgnoreCase);
         }
     }
 } 

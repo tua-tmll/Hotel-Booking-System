@@ -5,53 +5,35 @@ using System.Linq;
 
 namespace LibrarySystem
 {
-    public class LibraryManager
+    // 1. Generic repository interface with constraints
+    public interface IRepository<T> where T : class, new()
     {
-        // Static linked list to track all items
-        private static readonly LinkedList<LibraryItem> _items = new LinkedList<LibraryItem>();
-        
-        // Static property to access the items
-        public static IReadOnlyList<LibraryItem> Items => _items.ToList();
+        void Add(T item);
+        bool Remove(string itemId);
+        T? Find(string itemId);
+        IEnumerable<T> GetAll();
+        IEnumerable<T> Search(Func<T, bool> predicate);
+    }
 
-        // Indexer for accessing items by index
-        public LibraryItem? this[int index]
+    // 2. Generic repository implementation
+    public class Repository<T> : IRepository<T> where T : LibraryItem, new()
+    {
+        private readonly LinkedList<T> _items = new LinkedList<T>();
+
+        public void Add(T item)
         {
-            get => _items.ElementAtOrDefault(index);
-        }
-
-        // Constructor
-        static LibraryManager()
-        {
-            // Anonymous method for logging
-            LibraryLogger.OnLog += delegate(string message)
-            {
-                Console.WriteLine(message);
-            };
-        }
-
-        // Add a new item to the library
-        public static void AddItem(LibraryItem item)
-        {
-            if (item == null)
-                throw new ArgumentNullException(nameof(item));
-
+            if (item == null) throw new ArgumentNullException(nameof(item));
             _items.AddLast(item);
-            LibraryLogger.Log($"Added new item: {item.Title} (ID: {item.ItemId})");
         }
 
-        // Remove an item from the library
-        public static bool RemoveItem(string itemId)
+        public bool Remove(string itemId)
         {
-            if (string.IsNullOrEmpty(itemId))
-                throw new ArgumentException("Item ID cannot be null or empty", nameof(itemId));
-
             var node = _items.First;
             while (node != null)
             {
                 if (node.Value.ItemId == itemId)
                 {
                     _items.Remove(node);
-                    LibraryLogger.Log($"Removed item with ID: {itemId}");
                     return true;
                 }
                 node = node.Next;
@@ -59,22 +41,93 @@ namespace LibrarySystem
             return false;
         }
 
-        // Find an item by ID using lambda expression
+        public T? Find(string itemId)
+        {
+            return _items.FirstOrDefault(item => item.ItemId == itemId);
+        }
+
+        public IEnumerable<T> GetAll()
+        {
+            foreach (var item in _items)
+                yield return item;
+        }
+
+        public IEnumerable<T> Search(Func<T, bool> predicate)
+        {
+            foreach (var item in _items)
+                if (predicate(item))
+                    yield return item;
+        }
+    }
+
+    // 3. Generic delegate for item events
+    public delegate void ItemEventHandler<T>(T item) where T : LibraryItem;
+
+    public class LibraryManager
+    {
+        // Use the generic repository for LibraryItem
+        private static readonly Repository<LibraryItem> _items = new Repository<LibraryItem>();
+
+        public static IReadOnlyList<LibraryItem> Items => _items.GetAll().ToList();
+
+        public LibraryItem? this[int index]
+        {
+            get => _items.GetAll().ElementAtOrDefault(index);
+        }
+
+        // 4. Generic event using the delegate
+        public static event ItemEventHandler<LibraryItem>? OnItemAdded;
+        public static event ItemEventHandler<LibraryItem>? OnItemRemoved;
+
+        static LibraryManager()
+        {
+            LibraryLogger.OnLog += delegate(string message)
+            {
+                Console.WriteLine(message);
+            };
+        }
+
+        public static void AddItem(LibraryItem item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+
+            _items.Add(item);
+            LibraryLogger.Log($"Added new item: {item.Title} (ID: {item.ItemId})");
+            OnItemAdded?.Invoke(item);
+        }
+
+        public static bool RemoveItem(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId))
+                throw new ArgumentException("Item ID cannot be null or empty", nameof(itemId));
+
+            var item = _items.Find(itemId);
+            var removed = _items.Remove(itemId);
+            if (removed && item != null)
+            {
+                LibraryLogger.Log($"Removed item with ID: {itemId}");
+                OnItemRemoved?.Invoke(item);
+            }
+            return removed;
+        }
+
         public static LibraryItem? FindItem(string itemId)
         {
             if (string.IsNullOrEmpty(itemId))
                 throw new ArgumentException("Item ID cannot be null or empty", nameof(itemId));
 
-            return _items.FirstOrDefault(item => item.ItemId == itemId);
+            return _items.Find(itemId);
         }
 
-        // Get all available items using lambda expression
+        // 5. Iterator using yield return
         public static IEnumerable<LibraryItem> GetAvailableItems()
         {
-            return _items.Where(item => item.IsAvailable);
+            foreach (var item in _items.GetAll())
+                if (item.IsAvailable)
+                    yield return item;
         }
 
-        // Save items to file
         public static void SaveToFile(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
@@ -84,12 +137,12 @@ namespace LibrarySystem
             {
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
-                    foreach (var item in _items)
+                    foreach (var item in _items.GetAll())
                     {
                         writer.WriteLine(item.Serialize());
                     }
                 }
-                LibraryLogger.Log($"Saved {_items.Count} items to file: {filePath}");
+                LibraryLogger.Log($"Saved {Items.Count} items to file: {filePath}");
             }
             catch (Exception ex)
             {
@@ -98,7 +151,6 @@ namespace LibrarySystem
             }
         }
 
-        // Load items from file
         public static void LoadFromFile(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
@@ -112,7 +164,12 @@ namespace LibrarySystem
 
             try
             {
-                _items.Clear();
+                // Clear repository
+                // (No direct clear method, so remove all by id)
+                var allIds = _items.GetAll().Select(i => i.ItemId).ToList();
+                foreach (var id in allIds)
+                    _items.Remove(id);
+
                 string[] lines = File.ReadAllLines(filePath);
 
                 foreach (string line in lines)
@@ -136,11 +193,11 @@ namespace LibrarySystem
                         if (item != null)
                         {
                             item.Deserialize(line);
-                            _items.AddLast(item);
+                            _items.Add(item);
                         }
                     }
                 }
-                LibraryLogger.Log($"Loaded {_items.Count} items from file: {filePath}");
+                LibraryLogger.Log($"Loaded {Items.Count} items from file: {filePath}");
             }
             catch (Exception ex)
             {
@@ -149,19 +206,28 @@ namespace LibrarySystem
             }
         }
 
-        // Static method to display all items using lambda expression
         public static string DisplayAllItems()
         {
-            return string.Join("\n\n", _items.Select(item => item.GetItemInfo()));
+            return string.Join("\n\n", _items.GetAll().Select(item => item.GetItemInfo()));
         }
 
-        // Search items using lambda expression
         public static IEnumerable<LibraryItem> SearchItems(Func<LibraryItem, bool> predicate)
         {
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
 
-            return _items.Where(predicate);
+            return _items.Search(predicate);
+        }
+
+        // 6. Generic method with constraint
+        public static T GetMaxPricedItem<T>(IEnumerable<T> items) where T : LibraryItem, IComparable<T>
+        {
+            if (items == null || !items.Any())
+                throw new ArgumentException("No items provided");
+            T max = items.First();
+            foreach (var item in items)
+                if (item.CompareTo(max) > 0) max = item;
+            return max;
         }
     }
 } 
